@@ -1,23 +1,13 @@
-# GunnerModPC
+# GHPC Missions Mod
 
 ## Features
-- Adds the T-34-85 to the Grafenwoehr tank range.
-- Adds the T62, T64A, M901 ITV and LEO1 to the Grafenwoehr tank range, however these are still WIP and some features are missing.
-- Adds back the live hitlog.
-- Adds back the FPS counter in the bottom left corner.
-- Removes the 3rd person crosshair.
-- Patches the map selector dropdown so you don't have to scroll for the bottom few maps.
-
-All features can be toggled in `\Gunner, HEAT, PC!\Bin\UserData\MelonPreferences.cfg`. Make sure to run the mod at least once to generate the settings.
-
-Tested on version 20230519
+Built off Andrix's mod at https://github.com/Andrix44/GunnerModPC but adds a few more things:
+- A lot of inactive vehicles on the Grafenwoehr tank range for better rangefinding practice. Several other vehicles have been added too with different ammo loadouts
+- The Replen Reaper, Kinetic Key, Reservist Recon, and Claustrophobia missions have been modified. I'll leave the spoilers out of the readme. 
 
 ## Installation
-- Install MelonLoader v0.5.7(!!!): https://github.com/LavaGang/MelonLoader.Installer/blob/master/README.md#how-to-install-re-install-or-update-melonloader.
-- Copy `GunnerModPC.dll` to `\Gunner, HEAT, PC!\Bin\Mods`.
-- 
-![T-34-85 at Grafenwoehr](https://github.com/Andrix44/GunnerModPC/assets/13806656/101581ed-2a18-4930-a4d6-4892860a5b99)
-![WIP vehicles at Grafenwoehr](https://github.com/Andrix44/GunnerModPC/assets/13806656/aaec52fc-cbcc-44e6-88aa-957d263cf76f)
+- Install MelonLoader v0.6.1: https://github.com/LavaGang/MelonLoader.Installer/blob/master/README.md#how-to-install-re-install-or-update-melonloader.
+- Copy `GHPCMissionsMod.dll` to `\Gunner, HEAT, PC!\Bin\Mods`.
 
 ## Building
 You can simply build the project with Visual Studio, but first you have to fix the references so that they point to your game DLLs.
