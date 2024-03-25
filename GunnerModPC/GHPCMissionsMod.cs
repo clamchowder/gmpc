@@ -1,5 +1,6 @@
 ﻿using BehaviorDesigner.Runtime.Tasks.Unity.UnityGameObject;
 using GHPC;
+using GHPC.AI;
 using GHPC.Mission.Data;
 using GHPC.Player;
 using GHPC.UI;
@@ -12,11 +13,14 @@ using GHPCMissionsMod;
 using HarmonyLib;
 using JetBrains.Annotations;
 using MelonLoader;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+
+using Object = UnityEngine.Object;
 
 [assembly: MelonInfo(typeof(GHPCMissionsMod.GHPCMissionsMod), "GHPC Missions Mod", "0.0.1", "Clamchowder")]
 [assembly: MelonGame("Radian Simulations LLC", "GHPC")]
@@ -32,6 +36,10 @@ namespace GHPCMissionsMod
         public static MelonPreferences_Entry<bool> reduceExtraTargetFlammability;
         public static MelonPreferences_Entry<bool> extraHeAmmoVehiclesGrafenWoehrPatchEnabled;
         public static MelonPreferences_Entry<bool> writeDebugTxt;
+
+        public List<Vehicle> Claustrophobia_t34_list;
+        public List<Vector3> Claustrophobia_t34_positions;
+        public IEnumerable<Vehicle> Claustrophobia_t55_list;
 
         public override void OnInitializeMelon()
         {
@@ -49,6 +57,7 @@ namespace GHPCMissionsMod
             LoggerInstance.Msg($"Loaded scene {sceneName}");
             if (sceneName.StartsWith("MainMenu") || sceneName.Equals("t64_menu"))
             {
+                // Make sure mission descriptions are slightly more accurate
                 MissionMenuSetup missionData = Resources.FindObjectsOfTypeAll<MissionMenuSetup>().FirstOrDefault();
                 FieldInfo scriptableMissionField = typeof(MissionMenuSetup).GetField("_allMissionsScriptable", BindingFlags.Instance | BindingFlags.NonPublic);
                 AllMissionsMetaDataScriptable scriptableMissionData = (AllMissionsMetaDataScriptable)scriptableMissionField.GetValue(missionData);
@@ -56,7 +65,7 @@ namespace GHPCMissionsMod
                 FieldInfo missionDescription = typeof(FactionMissionInfo).GetField("_description", BindingFlags.Instance | BindingFlags.NonPublic);
                 foreach (MissionTheaterScriptable theater in scriptableMissionData.Theaters)
                 {
-                    LoggerInstance.Msg("Theater: " + theater.name);
+                    // LoggerInstance.Msg("Theater: " + theater.name);
                     foreach (MissionMetaData missionMetaData in theater.Missions)
                     {
                         if (missionMetaData.MissionName.Equals("Reservist Recon"))
@@ -66,11 +75,12 @@ namespace GHPCMissionsMod
                             // there's only one faction
                             FactionMissionInfo missionInfo = missionMetaData.FactionInfo[0];
                             string newDesc = "Situation - Comrade, the enemy is assembling for a major attack and must be disrupted. ";
-                            newDesc += "We would use artillery, but the truck delivering 152mm shells took a turn too fast and flipped over. ";
-                            newDesc += "Fortunately another reservist unit with T-34s is available to assist.\n\n";
+                            newDesc += "We would use artillery, but the truck delivering 152mm shells took a turn too fast and flipped over.\n\n";
+                            newDesc += "Fortunately another reservist unit with T-34-85s is available to assist. Since 85mm is almost 100mm which is almost 125mm which is almost 152mm, command has judged available firepower to be adequate.\n\n";
                             newDesc += "Enemy - Tanks, APCs, and helicopters. Expect a screen of APCs backed up by patrolling tanks and helicopters.\n\n";
                             newDesc += "Friendly - 2x PT-76, 4x T-34\n\n";
-                            newDesc += "Mission - Find where the enemy is assembling. Then use the T-34's powerful 85mm gun to mercilessly destroy them!\n\n";
+                            newDesc += "Mission - Find the enemy assembly point. Then use the T-34's powerful 85mm gun to mercilessly destroy them!\n\n";
+                            newDesc += "Other - The mission will be considered complete once you spot the enemy's main body and return to the start point. Do not return until you've destroyed the enemy!";
                             missionDescription.SetValue(missionInfo, newDesc);
                         }
                         else if (missionMetaData.MissionName.Equals("Kinetic Key"))
@@ -80,7 +90,7 @@ namespace GHPCMissionsMod
                             // LoggerInstance.Msg("Mission info: " + missionInfo.Description);
                             string newDesc = "Situation - You are an M60A3 platoon tasked with interdicting a large enemy attack.\n\n";
                             newDesc += "Enemy - Lots of T-72s and BMP-1s\n\n";
-                            newDesc += "Mission - Stop them before they reach Objective June and steal our cookies. Need I say more?\n\n";
+                            newDesc += "Mission - Stop them before they reach Objective June and steal our cheese. Need I say more?\n\n";
                             newDesc += "Other - A congressional dispute over whether pizza is a fruit or a vegetable has led to a government shutdown. ";
                             newDesc += "Unfortunately that means a shortage of M833 ammo. We'll have to use M774 for now. On the bright side, the Air Force is aware of this situation and has additional aircraft ready to support us.\n\n";
                             newDesc += "End Conditions-\n";
@@ -100,11 +110,26 @@ namespace GHPCMissionsMod
                             newDesc += "The rumors are probably nothing but if you see any T-80Bs, do not approach them as they may hurt you. Call in artillery and get out of there.";
                             missionDescription.SetValue(missionInfo, newDesc);
                         }
-                        
+                        else if (missionMetaData.MissionName.Equals("Claustrophobia"))
+                        {
+                            missionMetaData.MissionName = "Claustrophobia (modded)";
+                            FactionMissionInfo missionInfo = missionMetaData.FactionInfo[0];
+                            string newDesc = "Situation - You are a M2 platoon tasked with defending a village crucial to the local cheese production economy. The enemy is expected to use all means at their disposal to take the cheese.\n\n";
+                            newDesc += "Enemy - 1x Company with attached tanks, 3x BMP-1 platoons, 1x T-55 section.\n\n";
+                            newDesc += "Friendly - 2x M2 Bradley in your section. 1x M1, somewhere.\n\n";
+                            newDesc += "Mission - Your platoon is to defend the town and prevent East Germany from addressing their cheese shortage.\n\n";
+                            newDesc += "Other - SIGINT reports East German reservists are furious at receiving pizza without cheese. They may be joining the assault against your position. A M1 has been sent to provide overwatch in case things get out of hand.\n\n";
+                            newDesc += "End Conditions -\n\n-Blue Victory: 70% enemies destroyed OR 50% enemies destroyed (they're unable to take the cheese back) and friendlies retreated\n-Blue Defeat: 75% friendlies destroyed";
+                            missionDescription.SetValue(missionInfo, newDesc);
+                        }
+
                         // LoggerInstance.Msg("  Mission: " + missionMetaData.MissionName);
                     }
                 }
             }
+
+            Claustrophobia_t55_list = null;
+            Claustrophobia_t34_list = null;
         }
 
         public override void OnSceneWasInitialized(int buildIndex, string sceneName)
@@ -191,6 +216,7 @@ namespace GHPCMissionsMod
             }
             else if (sceneName == "GT01_Reservist_Recon")
             {
+                // It's basically the same thing as artillery. Right?
                 GameObject t3485 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T-34-85").FirstOrDefault() as GameObject;
                 SpawnVehicle(t3485, new Vector3(460f, 130.7279f, -2576.2f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_1);
                 SpawnVehicle(t3485, new Vector3(480f, 130.7279f, -2576.2f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_2);
@@ -200,13 +226,14 @@ namespace GHPCMissionsMod
                 // There should only be one fire mission manager
                 FireMissionManager fireMissionManager = Resources.FindObjectsOfTypeAll<FireMissionManager>().FirstOrDefault();
                 FieldInfo remainingMissionFieldInfo = typeof(ArtilleryBattery).GetField("_missionsAvailable", BindingFlags.Instance | BindingFlags.NonPublic);
-                remainingMissionFieldInfo.SetValue(fireMissionManager.RedArtilleryBatteries[0], 0);
+                remainingMissionFieldInfo.SetValue(fireMissionManager.RedArtilleryBatteries[0], 0); // who needs artillery anyway
             }
             else if (sceneName == "GT02_kinetic_key")
             {
                 IEnumerable<Vehicle> vehicles = Resources.FindObjectsOfTypeAll<Vehicle>();
                 foreach (Vehicle vehicle in vehicles)
                 {
+                    // budget cuts
                     if (vehicle.name.StartsWith("M60A3")) SetM774Ammo(vehicle);
                 }
 
@@ -275,8 +302,32 @@ namespace GHPCMissionsMod
                 SpawnVehicle(t80, new Vector3(-332.6814f, 83.4028f, -900.2035f), new Quaternion(-9.112011E-05f, 0.6990631f, -0.0002299712f, 0.71506f), false, Faction.Red, out Vehicle t80_2);
                 SpawnVehicle(t80, new Vector3(-323.2041f, 83.9161f, -878.7783f), new Quaternion(-9.112011E-05f, 0.6990631f, -0.0002299712f, 0.71506f), false, Faction.Red, out Vehicle t80_3);
             }
+            else if (sceneName == "GT02_claustrophobia")
+            {
+                GameObject m1 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "M1").FirstOrDefault() as GameObject;
+                SpawnVehicle(m1, new Vector3(-2244.504f, 97.5607f, -912.041f), new Quaternion(-9.112011E-05f, 0.6990631f, -0.0002299712f, 0.71506f), false, Faction.Blue, out Vehicle m1_1);
+                SetAmmoCount(m1_1, new int[] { 50, 2 });
+                SetM774Ammo(m1_1);
 
-            DumpCasInfo();
+                GameObject t3485 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T-34-85").FirstOrDefault() as GameObject;
+                SpawnVehicle(t3485, new Vector3(-430.446f, 93.2921f, -669.5197f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_1);
+                SpawnVehicle(t3485, new Vector3(-476.9093f, 100.7423f, -619.7258f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_2);
+                SpawnVehicle(t3485, new Vector3(-543.8735f, 103.2393f, -654.0811f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_3);
+                SpawnVehicle(t3485, new Vector3(-586.396f, 104.4196f, -678.4468f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_4);
+                Claustrophobia_t34_list = new List<Vehicle>();
+                Claustrophobia_t34_list.Add(t34_1);
+                Claustrophobia_t34_list.Add(t34_2);
+                Claustrophobia_t34_list.Add(t34_3);
+                Claustrophobia_t34_list.Add(t34_4);
+
+                Claustrophobia_t34_positions = new List<Vector3>();
+                Claustrophobia_t34_positions.Add(new Vector3(-430.446f, 93.2921f, -669.5197f));
+                Claustrophobia_t34_positions.Add(new Vector3(-476.9093f, 100.7423f, -619.7258f));
+                Claustrophobia_t34_positions.Add(new Vector3(-543.8735f, 103.2393f, -654.0811f));
+                Claustrophobia_t34_positions.Add(new Vector3(-586.396f, 104.4196f, -678.4468f));
+
+                Claustrophobia_t55_list = Resources.FindObjectsOfTypeAll<Vehicle>().Where(o => o.name == "T55A");
+            }
 
             if (writeDebugTxt.Value)
             {
@@ -298,11 +349,81 @@ namespace GHPCMissionsMod
                 // change this
                 System.IO.File.WriteAllText("C:\\git\\GunnerTestPC\\objs.txt", sb.ToString());
 
-                VehicleInfo[] vehicleInfoArray = GameObject.FindObjectsOfType<VehicleInfo>();
+                VehicleInfo[] vehicleInfoArray = Object.FindObjectsOfType<VehicleInfo>();
                 LoggerInstance.Msg("VehicleInfoCount: " + vehicleInfoArray.Length);
                 foreach (VehicleInfo vehicleInfo in vehicleInfoArray)
                 {
                     LoggerInstance.Msg("VehicleInfo: " + vehicleInfo.name + ", gun " + vehicleInfo.Gun.name);
+                }
+            }
+        }
+
+        private bool startingCheckMessage = false;
+        public override void OnLateUpdate()
+        {
+            // Platoons don't seem to be initialized on vehicle spawn
+            if (Claustrophobia_t34_list != null && Claustrophobia_t55_list != null)
+            {
+                if (!startingCheckMessage)
+                {
+                    LoggerInstance.Msg($"Found {Claustrophobia_t55_list.Count()} T55As, will update platoons once they're initialized");
+                }
+                
+                bool platoonAssignmentWorked = false;
+                foreach (Vehicle t55 in Claustrophobia_t55_list)
+                {
+                    // attach to the platoon
+                    if (t55.Platoon != null)
+                    {
+                        FieldInfo mobileUnitsFieldInfo = typeof(GHPC.AI.Platoons.PlatoonData).GetField("MobileUnits", BindingFlags.Instance | BindingFlags.NonPublic);
+                        FieldInfo formationTargetsFieldInfo = typeof(GHPC.AI.Platoons.PlatoonData).GetField("FormationTargets", BindingFlags.Instance | BindingFlags.NonPublic);
+                        LoggerInstance.Msg("Attaching T34s to " + t55.Platoon.name);
+                        TransformWaypoint transformWaypointTemplate = GameObject.FindObjectsOfType<TransformWaypoint>().FirstOrDefault();
+                        int t34_idx = 0;
+                        foreach (Vehicle t34 in Claustrophobia_t34_list)
+                        {
+                            t34.Platoon = t55.Platoon;
+                            t34.Platoon.Units.Add(t34);
+                            List<Unit> mobileUnits = (List<Unit>)mobileUnitsFieldInfo.GetValue(t34.Platoon);
+                            mobileUnits.Add(t34);
+                            mobileUnitsFieldInfo.SetValue(t34.Platoon, mobileUnits);
+
+                            var formationTargets = formationTargetsFieldInfo.GetValue(t34.Platoon);
+                            Type formationMarkerInfoType = typeof(GHPC.AI.Platoons.PlatoonData).Assembly.GetType("GHPC.AI.Platoons.PlatoonData+FormationMarkerInfo");
+                            FieldInfo formationMarkerIndexFieldInfo = formationMarkerInfoType.GetField("Index", BindingFlags.Instance | BindingFlags.Public);
+                            FieldInfo formationMarkerUnitField = formationMarkerInfoType.GetField("AssignedUnit", BindingFlags.Instance | BindingFlags.Public);
+                            FieldInfo formationMarkerField = formationMarkerInfoType.GetField("Marker", BindingFlags.Instance | BindingFlags.Public);
+
+                            object formationMarkerInfo = Activator.CreateInstance(formationMarkerInfoType);
+                            formationMarkerUnitField.SetValue(formationMarkerInfo, t34);
+                            formationMarkerIndexFieldInfo.SetValue(formationMarkerInfo, t34_idx);
+
+
+                            TransformWaypoint marker = GameObject.Instantiate(transformWaypointTemplate, Claustrophobia_t34_positions[t34_idx], new Quaternion(0, -0.6166884f, 0, 0.7872075f));
+                            formationMarkerField.SetValue(formationMarkerInfo, marker);
+                            marker.FollowMode = WaypointHolder.FollowModes.Forward;
+                            marker.MaxSpeed = 0f;
+                            marker.CompletionRadius = 1.4f;
+
+                            MethodInfo listAddMethodInfo = formationTargets.GetType().GetMethod("Add", BindingFlags.Instance | BindingFlags.Public);
+                            listAddMethodInfo.Invoke(formationTargets, new object[] { formationMarkerInfo });
+                            //formationTargets.Add(formationMarkerInfo);
+                            t34_idx++;
+                        }
+
+                        t55.Platoon.SetFormation(GHPC.AI.Platoons.FormationType.Line);
+                        platoonAssignmentWorked = true;
+                        break;
+                    }
+                    else if (!startingCheckMessage) LoggerInstance.Msg("T55 has no platoon?");
+                }
+
+                startingCheckMessage = true;
+
+                if (platoonAssignmentWorked)
+                {
+                    Claustrophobia_t55_list = null;
+                    Claustrophobia_t34_list = null;
                 }
             }
         }
@@ -439,7 +560,7 @@ namespace GHPCMissionsMod
                 if (instantiatedVehicle.WeaponsManager == null) LoggerInstance.Msg($"{vehicle.name} WeaponsManager is null");
                 else
                 {
-                    LoggerInstance.Msg($"{vehicle.name} WeaponsManager: {instantiatedVehicle.WeaponsManager.name}");
+                    // LoggerInstance.Msg($"{vehicle.name} WeaponsManager: {instantiatedVehicle.WeaponsManager.name}");
                     WeaponSystemInfo[] weaponsSystems = instantiatedVehicle.WeaponsManager.Weapons;
                     for (int i = 0; i < weaponsSystems.Length; i++)
                     {
@@ -467,7 +588,7 @@ namespace GHPCMissionsMod
                     if (instantiatedVehicle.FlammablesMgr != null && reduceExtraTargetFlammability.Value) instantiatedVehicle.FlammablesMgr.enabled = false;
                 }
 
-                LoggerInstance.Msg($"{vehicle.name} successfully spawned at {vehicle.transform.position}");
+                // LoggerInstance.Msg($"{vehicle.name} successfully spawned at {vehicle.transform.position}");
             }
             else
             {
@@ -510,6 +631,9 @@ namespace GHPCMissionsMod
             }
         }
 
+        /// <summary>
+        /// Logs existing vehicles and their positions
+        /// </summary>
         void DumpVehiclePositions()
         {
             IEnumerable<Vehicle> vehicles = Resources.FindObjectsOfTypeAll<Vehicle>();
@@ -525,6 +649,9 @@ namespace GHPCMissionsMod
             }
         }
 
+        /// <summary>
+        /// Logs close air support available for a mission
+        /// </summary>
         void DumpCasInfo()
         {
             CasSupportManager casSupportManager = Resources.FindObjectsOfTypeAll<CasSupportManager>().FirstOrDefault();
@@ -548,7 +675,7 @@ namespace GHPCMissionsMod
             {
                 foreach (CasAirframeUnit casUnit in casSupportManager.RedCasAirframes)
                 {
-                    if (casUnit != null) LoggerInstance.Msg("Blue has cas unit " + casUnit.FriendlyName + " with " + casMissionsAvailable.GetValue(casUnit) + " missions available");
+                    if (casUnit != null) LoggerInstance.Msg("Red has cas unit " + casUnit.FriendlyName + " with " + casMissionsAvailable.GetValue(casUnit) + " missions available");
                 }
             }
         }
