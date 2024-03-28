@@ -9,6 +9,7 @@ using GHPC.Weaponry.Artillery;
 using GHPC.Weaponry.CAS;
 using GHPC.Weapons;
 using GHPC.Weapons.Artillery;
+using GHPC.World;
 using GHPCMissionsMod;
 using HarmonyLib;
 using JetBrains.Annotations;
@@ -301,6 +302,13 @@ namespace GHPCMissionsMod
                 SpawnVehicle(t80, new Vector3(-292.7939f, 82.7014f, -900.1545f), new Quaternion(-9.112011E-05f, 0.6990631f, -0.0002299712f, 0.71506f), false, Faction.Red, out Vehicle t80_1);
                 SpawnVehicle(t80, new Vector3(-332.6814f, 83.4028f, -900.2035f), new Quaternion(-9.112011E-05f, 0.6990631f, -0.0002299712f, 0.71506f), false, Faction.Red, out Vehicle t80_2);
                 SpawnVehicle(t80, new Vector3(-323.2041f, 83.9161f, -878.7783f), new Quaternion(-9.112011E-05f, 0.6990631f, -0.0002299712f, 0.71506f), false, Faction.Red, out Vehicle t80_3);
+
+                List<Unit> unimportantUnits = new List<Unit>();
+                unimportantUnits.Add(t80.GetComponent<Vehicle>());
+                unimportantUnits.Add(t80_1);
+                unimportantUnits.Add(t80_2);
+                unimportantUnits.Add(t80_3);
+                AppendUnimportantUnits(unimportantUnits);
             }
             else if (sceneName == "GT02_claustrophobia")
             {
@@ -327,6 +335,12 @@ namespace GHPCMissionsMod
                 Claustrophobia_t34_positions.Add(new Vector3(-586.396f, 104.4196f, -678.4468f));
 
                 Claustrophobia_t55_list = Resources.FindObjectsOfTypeAll<Vehicle>().Where(o => o.name == "T55A");
+
+                // allow mission completion without killing t-34s
+                List<Unit> unimportantUnits = new List<Unit>();
+                unimportantUnits.Add(t3485.GetComponent<Vehicle>());
+                unimportantUnits.AddRange(Claustrophobia_t34_list);
+                AppendUnimportantUnits(unimportantUnits);
             }
 
             if (writeDebugTxt.Value)
@@ -629,6 +643,42 @@ namespace GHPCMissionsMod
                     remove_vis.Invoke(rack, new object[] { transform });
                 }
             }
+        }
+        
+        // Allows all units to be destroyed victory condition to be met if certain "unimportant" units
+        // are still active
+        void AppendUnimportantUnits(List<Unit> units)
+        {
+            SceneUnitsManager unitsManager = Resources.FindObjectsOfTypeAll<SceneUnitsManager>().FirstOrDefault();
+            if (unitsManager == null)
+            {
+                LoggerInstance.Msg("Could not find mission's SceneUnitsManager");
+                return;
+            }
+
+            int arrLen = units.Count;
+            if (unitsManager.Meta.UnimportantUnits != null)
+            {
+                arrLen += unitsManager.Meta.UnimportantUnits.Length;
+            }
+
+            Unit[] unimportantUnitsArr = new Unit[arrLen];
+            int unitIdx = 0;
+            if (unitsManager.Meta.UnimportantUnits != null)
+            {
+                for (; unitIdx < unitsManager.Meta.UnimportantUnits.Length; unitIdx++)
+                {
+                    unimportantUnitsArr[unitIdx] = unitsManager.Meta.UnimportantUnits[unitIdx];
+                }
+            }
+
+            foreach (Unit unit in units)
+            {
+                unimportantUnitsArr[unitIdx] = unit;
+                unitIdx++;
+            }
+
+            unitsManager.Meta.UnimportantUnits = unimportantUnitsArr;
         }
 
         /// <summary>
