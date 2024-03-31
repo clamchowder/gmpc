@@ -1,6 +1,7 @@
 ﻿using BehaviorDesigner.Runtime.Tasks.Unity.UnityGameObject;
 using GHPC;
 using GHPC.AI;
+using GHPC.Mission;
 using GHPC.Mission.Data;
 using GHPC.Player;
 using GHPC.UI;
@@ -41,6 +42,8 @@ namespace GHPCMissionsMod
         public List<Vehicle> Claustrophobia_t34_list;
         public List<Vector3> Claustrophobia_t34_positions;
         public IEnumerable<Vehicle> Claustrophobia_t55_list;
+
+        public bool SetTimeHack = false;
 
         public override void OnInitializeMelon()
         {
@@ -98,6 +101,14 @@ namespace GHPCMissionsMod
                             newDesc += "-Blue Victory- 85% enemies destroyed\n";
                             newDesc += "-Blue Defeat- 100% friendlies destroyed\n";
                             missionDescription.SetValue(missionInfo, newDesc);
+
+                            // this is a hack for missions that don't have day time options.
+                            // make the options show up (they don't work because there's no RandomEnvironment GameObject, maybe), then sort it out on mission load
+                            missionMetaData.TimeOptions = new RandomEnvironment.EnvSettingOption[2];
+                            missionMetaData.TimeOptions[0] = new RandomEnvironment.EnvSettingOption();
+                            missionMetaData.TimeOptions[0].Time = 260f;
+                            missionMetaData.TimeOptions[1] = new RandomEnvironment.EnvSettingOption();
+                            missionMetaData.TimeOptions[1].Time = 464.3f;
                         }
                         else if (missionMetaData.MissionName.Equals("Replen Reaper"))
                         {
@@ -110,6 +121,12 @@ namespace GHPCMissionsMod
                             newDesc += "Other - Command has heard the rumors about Soviets showing up at the replenishment point. Additional artillery batteries have been made available just in case. ";
                             newDesc += "The rumors are probably nothing but if you see any T-80Bs, do not approach them as they may hurt you. Call in artillery and get out of there.";
                             missionDescription.SetValue(missionInfo, newDesc);
+
+                            missionMetaData.TimeOptions = new RandomEnvironment.EnvSettingOption[2];
+                            missionMetaData.TimeOptions[0] = new RandomEnvironment.EnvSettingOption();
+                            missionMetaData.TimeOptions[0].Time = 260f;
+                            missionMetaData.TimeOptions[1] = new RandomEnvironment.EnvSettingOption();
+                            missionMetaData.TimeOptions[1].Time = 464.3f;
                         }
                         else if (missionMetaData.MissionName.Equals("Claustrophobia"))
                         {
@@ -122,9 +139,20 @@ namespace GHPCMissionsMod
                             newDesc += "Other - SIGINT reports East German reservists are furious at receiving pizza without cheese. They may be joining the assault against your position. A M1 has been sent to provide overwatch in case things get out of hand.\n\n";
                             newDesc += "End Conditions -\n\n-Blue Victory: 70% enemies destroyed OR 50% enemies destroyed (they're unable to take the cheese back) and friendlies retreated\n-Blue Defeat: 75% friendlies destroyed";
                             missionDescription.SetValue(missionInfo, newDesc);
+
+                            missionMetaData.TimeOptions = new RandomEnvironment.EnvSettingOption[2];
+                            missionMetaData.TimeOptions[0] = new RandomEnvironment.EnvSettingOption();
+                            missionMetaData.TimeOptions[0].Time = 260f;
+                            missionMetaData.TimeOptions[1] = new RandomEnvironment.EnvSettingOption();
+                            missionMetaData.TimeOptions[1].Time = 464.3f;
                         }
 
-                        // LoggerInstance.Msg("  Mission: " + missionMetaData.MissionName);
+                        /*LoggerInstance.Msg("  Mission: " + missionMetaData.MissionName);
+                        LoggerInstance.Msg("    Default time: " + missionMetaData.DefaultTime);
+                        foreach (RandomEnvironment.EnvSettingOption opt in  missionMetaData.TimeOptions)
+                        {
+                            LoggerInstance.Msg("    Time option: " + opt.Time + " has weight " + opt.RandomWeight);
+                        }*/
                     }
                 }
             }
@@ -231,6 +259,8 @@ namespace GHPCMissionsMod
             }
             else if (sceneName == "GT02_kinetic_key")
             {
+                SetTimeHack = true;
+
                 IEnumerable<Vehicle> vehicles = Resources.FindObjectsOfTypeAll<Vehicle>();
                 foreach (Vehicle vehicle in vehicles)
                 {
@@ -241,22 +271,25 @@ namespace GHPCMissionsMod
                 CasSupportManager casSupportManager = Resources.FindObjectsOfTypeAll<CasSupportManager>().FirstOrDefault();
                 FieldInfo casMissionsAvailable = typeof(CasAirframeUnit).GetField("_missionsAvailable", BindingFlags.Instance | BindingFlags.NonPublic);
                 CasAirframeUnit[] airframes = new CasAirframeUnit[6];
+
+                // keep the CAS missions already present
                 int airframeIdx = 0;
                 foreach (CasAirframeUnit casUnit in casSupportManager.BlueCasAirframes)
                 {
-                    // Moar planes?
-                    casMissionsAvailable.SetValue(casUnit, 2);
                     if (airframeIdx < airframes.Length) airframes[airframeIdx] = casUnit;
                     airframeIdx++;
                 }
 
                 for (; airframeIdx < airframes.Length;airframeIdx++)
                 {
+                    // 0 is an A-10 and it misses its bombs every time
+                    // 1 is a F-4
                     CasAirframeUnit newAirframe = new CasAirframeUnit();
-                    newAirframe.airframePrefab = airframes[0].airframePrefab;
-                    newAirframe.Loadout = airframes[0].Loadout;
-                    newAirframe.flyoverType = airframes[0].flyoverType;
+                    newAirframe.airframePrefab = airframes[1].airframePrefab;
+                    newAirframe.Loadout = airframes[1].Loadout;
+                    newAirframe.flyoverType = airframes[1].flyoverType;
                     newAirframe.rechargeTime = 60f;
+                    casMissionsAvailable.SetValue(newAirframe, 3);
                     airframes[airframeIdx] = newAirframe;
                 }
 
@@ -264,6 +297,8 @@ namespace GHPCMissionsMod
             }
             else if (sceneName == "GT02_replen_reaper")
             {
+                SetTimeHack = true;
+
                 // Add another artillery battery so the player can stack them for an uber barrage (or call one and keep the other in reserve)
                 FireMissionManager fireMissionManager = Resources.FindObjectsOfTypeAll<FireMissionManager>().FirstOrDefault();
                 FieldInfo remainingMissionFieldInfo = typeof(ArtilleryBattery).GetField("_missionsAvailable", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -312,6 +347,8 @@ namespace GHPCMissionsMod
             }
             else if (sceneName == "GT02_claustrophobia")
             {
+                SetTimeHack = true;
+
                 GameObject m1 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "M1").FirstOrDefault() as GameObject;
                 SpawnVehicle(m1, new Vector3(-2244.504f, 97.5607f, -912.041f), new Quaternion(-9.112011E-05f, 0.6990631f, -0.0002299712f, 0.71506f), false, Faction.Blue, out Vehicle m1_1);
                 SetAmmoCount(m1_1, new int[] { 50, 2 });
@@ -438,6 +475,23 @@ namespace GHPCMissionsMod
                 {
                     Claustrophobia_t55_list = null;
                     Claustrophobia_t34_list = null;
+                }
+            }
+
+            if (SetTimeHack)
+            {
+                // Directly set the mission time instead of trying to figure out how to instantiate a Unity object (RandomizeEnvironment)
+                // Mission initialization overrides the time at some point before the "loading..." screen goes away
+                // So wait until the loading screen goes away, then set the mission time
+                SceneController sceneController = Object.FindAnyObjectByType<SceneController>();
+                if (sceneController != null)
+                {
+                    SetTimeHack = sceneController.LoaderCanvasElement.activeSelf;
+                }
+
+                if (!SetTimeHack)
+                {
+                    SetMissionTime(260f, 464.3f);
                 }
             }
         }
@@ -679,6 +733,20 @@ namespace GHPCMissionsMod
             }
 
             unitsManager.Meta.UnimportantUnits = unimportantUnitsArr;
+        }
+
+        void SetMissionTime(float dayTime, float nightTime)
+        {
+            CelestialSky celestialSky = Object.FindObjectOfType<CelestialSky>();
+            if (celestialSky != null)
+            {
+                celestialSky.t = SceneController.IsDaytime ? dayTime : nightTime;
+                LoggerInstance.Msg("Set time to " + celestialSky.t + " (" + (SceneController.IsDaytime ? "Day" : "Night") + ")");
+            }
+            else
+            {
+                LoggerInstance.Msg("Could not find celestial sky");
+            }
         }
 
         /// <summary>
