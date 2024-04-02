@@ -33,8 +33,18 @@ namespace GHPCMissionsMod
     {
         public static MelonPreferences_Category config;
         public static MelonPreferences_Entry<bool> t3485GrafenwoehrPatchEnabled;
-        public static MelonPreferences_Entry<bool> extraPactTargetsGrafenwoehrPatchEnabled;
-        public static MelonPreferences_Entry<bool> extraNatoTargetsGrafenwoehrPatchEnabled;
+
+        public static MelonPreferences_Entry<bool> practiceBmp2Targets;
+        public static MelonPreferences_Entry<bool> practiceT64Targets;
+        public static MelonPreferences_Entry<bool> practiceBdrmTargets;
+        public static MelonPreferences_Entry<bool> practiceT80Targets;
+        public static MelonPreferences_Entry<bool> practiceM60Targets;
+        public static MelonPreferences_Entry<bool> practiceM1Targets;
+        public static MelonPreferences_Entry<bool> practiceT62Targets;
+        public static MelonPreferences_Entry<bool> practiceT55Targets;
+        public static MelonPreferences_Entry<bool> practiceT72Targets;
+        public static MelonPreferences_Entry<bool> practiceBmp1Targets;
+
         public static MelonPreferences_Entry<bool> reduceExtraTargetFlammability;
         public static MelonPreferences_Entry<bool> extraHeAmmoVehiclesGrafenWoehrPatchEnabled;
         public static MelonPreferences_Entry<bool> writeDebugTxt;
@@ -45,12 +55,23 @@ namespace GHPCMissionsMod
 
         public bool SetTimeHack = false;
 
+        public SceneUnitsManager currentSceneUnitsManager = null;
+
         public override void OnInitializeMelon()
         {
-            config = MelonPreferences.CreateCategory("GMPCConfig");
+            config = MelonPreferences.CreateCategory("GHPCMissionsModConfig");
             t3485GrafenwoehrPatchEnabled = config.CreateEntry<bool>("t3485GrafenwoehrPatchEnabled", true);
-            extraPactTargetsGrafenwoehrPatchEnabled = config.CreateEntry<bool>("extraPactTargetsGrafenwoehrPatchEnabled", true);
-            extraNatoTargetsGrafenwoehrPatchEnabled = config.CreateEntry<bool>("extraNatoTargetsGrafenwoehrPatchEnabled", true);
+            practiceBmp2Targets = config.CreateEntry<bool>("practiceBmp2Targets", true);
+            practiceT64Targets = config.CreateEntry<bool>("practiceT64Targets", true);
+            practiceBdrmTargets = config.CreateEntry<bool>("practiceBdrmTargets", true);
+            practiceT80Targets = config.CreateEntry<bool>("practiceT80Targets", true);
+            practiceM1Targets = config.CreateEntry<bool>("practiceM1Targets", true);
+            practiceT62Targets = config.CreateEntry<bool>("practiceT62Targets", true);
+            practiceT55Targets = config.CreateEntry<bool>("practiceT55Targets", true);
+            practiceT72Targets = config.CreateEntry<bool>("practiceT72Targets", true);
+            practiceBmp1Targets = config.CreateEntry<bool>("practiceBmp1Targets", true);
+            practiceM60Targets = config.CreateEntry<bool>("practiceM60Targets", true);
+
             extraHeAmmoVehiclesGrafenWoehrPatchEnabled = config.CreateEntry<bool>("extraHeAmmoVehiclesGrafenWoehrPatchEnabled", true);
             reduceExtraTargetFlammability = config.CreateEntry<bool>("reduceExtraTargetFlammability", true);
             writeDebugTxt = config.CreateEntry<bool>("writeDebugTxt", false);
@@ -165,6 +186,8 @@ namespace GHPCMissionsMod
         {
             LoggerInstance.Msg($"Initialized scene {sceneName}, trying to patch game...");
 
+            currentSceneUnitsManager = Object.FindObjectOfType<SceneUnitsManager>();
+
             if (sceneName == "TR01_showcase")
             {
                 // try to enumerate vehicles
@@ -181,6 +204,7 @@ namespace GHPCMissionsMod
                 GameObject t64a = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T64A").FirstOrDefault() as GameObject;
                 GameObject t62 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T62").FirstOrDefault() as GameObject;
                 GameObject t80 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T80B").FirstOrDefault() as GameObject;
+                GameObject t54 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T54A").FirstOrDefault() as GameObject;
 
                 if (t3485GrafenwoehrPatchEnabled.Value)
                 {
@@ -194,52 +218,83 @@ namespace GHPCMissionsMod
                     }
                 }
 
-                if (extraPactTargetsGrafenwoehrPatchEnabled.Value)
+                // spawn some targets
+                /*if (practiceBmp2Targets.Value)
                 {
-                    // spawn some targets
-                    SpawnNeutralVehicle(t64a, new Vector3(600f, 12f, 1514f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // front center, 600M range
-                    SpawnNeutralVehicle(bmp2, new Vector3(200f, 10f, 1484f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // far to the right, 1000M range, a bit low
-                    SpawnNeutralVehicle(t64a, new Vector3(-900f, 12f, 1720f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // to the right, 2100M range
-                    SpawnNeutralVehicle(t62, new Vector3(-1400f, 12f, 1620f), new Quaternion(0f, 0.2f, 0f, -0.8f), practiceTarget: true, out _);  // far left field, slightly behind ridge, 2600M range
-                    SpawnNeutralVehicle(t64a, new Vector3(-500f, 8f, 1650f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // front center, 1700M range
-                    SpawnNeutralVehicle(bmp2, new Vector3(-600f, 10f, 1690f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // 1800M range, front left, slightly off ground
-                    SpawnNeutralVehicle(t64a, new Vector3(-1500f, 12f, 1720f), new Quaternion(0f, -0.2f, 0f, -0.8f), practiceTarget: true, out _); // near farthest trees, 2700M range
-                    SpawnNeutralVehicle(t55, new Vector3(-1200f, 12f, 1740f), new Quaternion(0f, -0.3f, 0f, -0.8f), practiceTarget: true, out _); // slightly to the right, 2400M range
-                    SpawnNeutralVehicle(t64a, new Vector3(36.5558f, 2.7727f, 1567.677f), new Quaternion(0f, -0.3f, 0f, -0.8f), practiceTarget: true, out _); // slightly to the left, 1200M range, kind of hidden with bushes
-                    SpawnNeutralVehicle(t62, new Vector3(-1000f, 8f, 1760f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // 2250M, slightly to the right
-                    SpawnNeutralVehicle(t64a, new Vector3(-1400f, 12f, 1780f), new Quaternion(0f, 0f, 0f, -0.8f), practiceTarget: true, out _); // 2200M, slightly more to the right
-                    SpawnNeutralVehicle(t72, new Vector3(-1500f, 12f, 1780f), new Quaternion(0f, 0f, 0f, -0.8f), practiceTarget: true, out _);  // 2700M, near right of farthest tree cluster
                     SpawnNeutralVehicle(bmp2, new Vector3(-1450f, 12f, 1700f), new Quaternion(0f, 0f, 0f, -0.8f), practiceTarget: true, out _); // 2560M, left of far tree cluster
                     SpawnNeutralVehicle(bmp2, new Vector3(-200f, 4f, 1700f), new Quaternion(0f, 0f, 0f, -0.8f), practiceTarget: true, out _);  // 1400M, right field
+                    SpawnNeutralVehicle(bmp2, new Vector3(200f, 10f, 1484f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // far to the right, 1000M range, a bit low
+                    SpawnNeutralVehicle(bmp2, new Vector3(-600f, 10f, 1690f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // 1800M range, front left, slightly off ground
+                }
+                
+                if (practiceBmp1Targets.Value)
+                {
+                    SpawnNeutralVehicle(bmp1, new Vector3(-200f, 4f, 1620f), new Quaternion(0f, 0f, 0f, -0.8f), practiceTarget: true, out _);  // 1400M, right field
+                }
+                
+                if (practiceBdrmTargets.Value)
+                {
                     SpawnNeutralVehicle(bdrm, new Vector3(600f, 12f, 1495f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // front center, ~600M
                     SpawnNeutralVehicle(bdrm, new Vector3(-200f, 4f, 1680f), new Quaternion(0f, 0f, 0f, -0.8f), practiceTarget: true, out _);  // 1400M, right field
-                    SpawnNeutralVehicle(bmp1, new Vector3(-200f, 4f, 1620f), new Quaternion(0f, 0f, 0f, -0.8f), practiceTarget: true, out _);  // 1400M, right field
-                    SpawnNeutralVehicle(t80, new Vector3(-1500f, 12f, 1690f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // 
+                }
+                
+                if (practiceT64Targets.Value)
+                {
+                    SpawnNeutralVehicle(t64a, new Vector3(600f, 12f, 1514f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // front center, 600M range
+                    SpawnNeutralVehicle(t64a, new Vector3(-900f, 12f, 1720f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // to the right, 2100M range
+                    SpawnNeutralVehicle(t64a, new Vector3(-500f, 8f, 1650f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // front center, 1700M range
+                    SpawnNeutralVehicle(t64a, new Vector3(-1500f, 12f, 1720f), new Quaternion(0f, -0.2f, 0f, -0.8f), practiceTarget: true, out _); // near farthest trees, 2700M range
+                    SpawnNeutralVehicle(t64a, new Vector3(36.5558f, 2.7727f, 1567.677f), new Quaternion(0f, -0.3f, 0f, -0.8f), practiceTarget: true, out _); // slightly to the left, 1200M range, kind of hidden with bushes
+                    SpawnNeutralVehicle(t64a, new Vector3(-1400f, 12f, 1780f), new Quaternion(0f, 0f, 0f, -0.8f), practiceTarget: true, out _); // 2200M, slightly more to the right
+                }
+
+                if (practiceT80Targets.Value)
+                {
+                    SpawnNeutralVehicle(t80, new Vector3(-1500f, 12f, 1690f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _);
                     SpawnNeutralVehicle(t80, new Vector3(-640f, 8f, 1700f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // somewhere in the middle
                     SpawnNeutralVehicle(t80, new Vector3(600f, 12f, 1550f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _);
                 }
 
-                if (extraNatoTargetsGrafenwoehrPatchEnabled.Value)
+                if (practiceT62Targets.Value)
                 {
-                    SpawnNeutralVehicle(m60a1, new Vector3(600f, 12f, 1614f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _);
-                    SpawnNeutralVehicle(m60a1, new Vector3(-660f, 12f, 1600f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _);
+                    SpawnNeutralVehicle(t62, new Vector3(-1400f, 12f, 1620f), new Quaternion(0f, 0.2f, 0f, -0.8f), practiceTarget: true, out _);  // far left field, slightly behind ridge, 2600M range
+                    SpawnNeutralVehicle(t62, new Vector3(-1000f, 8f, 1760f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _); // 2250M, slightly to the right
+                }
+
+                if(practiceT55Targets.Value)
+                {
+                    SpawnNeutralVehicle(t55, new Vector3(-1200f, 12f, 1740f), new Quaternion(0f, -0.3f, 0f, -0.8f), practiceTarget: true, out _); // slightly to the right, 2400M range
+                }
+                    
+                if (practiceT72Targets.Value)
+                {
+                    SpawnNeutralVehicle(t72, new Vector3(-1500f, 12f, 1780f), new Quaternion(0f, 0f, 0f, -0.8f), practiceTarget: true, out _);  // 2700M, near right of farthest tree cluster
+                }*/
+
+                if (practiceM1Targets.Value)
+                {
                     SpawnNeutralVehicle(m1ip, new Vector3(-820f, 12.5f, 1600f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _);
                     SpawnNeutralVehicle(m1ip, new Vector3(-700f, 12.5f, 1650f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _);
                 }
+
+                if (practiceM60Targets.Value)
+                {
+                    SpawnNeutralVehicle(m60a1, new Vector3(600f, 12f, 1614f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _);
+                    SpawnNeutralVehicle(m60a1, new Vector3(-660f, 12f, 1600f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _);
+                } 
 
                 if (extraHeAmmoVehiclesGrafenWoehrPatchEnabled.Value)
                 {
                     SpawnNeutralVehicle(m60a1, new Vector3(1179f, 22f, 1654f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle nerfedM60A1);
                     SpawnNeutralVehicle(t72, new Vector3(1220f, 24f, 1574f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle t72_he);
                     SpawnNeutralVehicle(t55, new Vector3(1220f, 25f, 1524f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle t55_he);
-                    SpawnNeutralVehicle(t64a, new Vector3(1220f, 25f, 1474f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle t64a_3bm22);
                     SpawnNeutralVehicle(t72, new Vector3(1220f, 24f, 1424f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle t72_3bm32);
+                    SpawnNeutralVehicle(t54, new Vector3(1220f, 25f, 1474f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle t54_1);
 
                     SetM774Ammo(nerfedM60A1);
                     SetAmmoCount(t72_he, new int[] { 1, 1, 42 });
                     SetT55APHE(t55_he);
                     SetAmmoCount(t55_he, new int[] { 20, 1, 21});
-                    Set3BM22Ammo(t64a_3bm22);
                     SetT72ApfsdsAmmo(t72_3bm32);
                 }
             }
@@ -288,7 +343,7 @@ namespace GHPCMissionsMod
                     newAirframe.airframePrefab = airframes[1].airframePrefab;
                     newAirframe.Loadout = airframes[1].Loadout;
                     newAirframe.flyoverType = airframes[1].flyoverType;
-                    newAirframe.rechargeTime = 60f;
+                    // newAirframe.rechargeTime = 60f;
                     casMissionsAvailable.SetValue(newAirframe, 3);
                     airframes[airframeIdx] = newAirframe;
                 }
@@ -359,6 +414,7 @@ namespace GHPCMissionsMod
                 SpawnVehicle(t3485, new Vector3(-476.9093f, 100.7423f, -619.7258f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_2);
                 SpawnVehicle(t3485, new Vector3(-543.8735f, 103.2393f, -654.0811f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_3);
                 SpawnVehicle(t3485, new Vector3(-586.396f, 104.4196f, -678.4468f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_4);
+
                 Claustrophobia_t34_list = new List<Vehicle>();
                 Claustrophobia_t34_list.Add(t34_1);
                 Claustrophobia_t34_list.Add(t34_2);
@@ -611,13 +667,12 @@ namespace GHPCMissionsMod
         /// <param name="instantiatedVehicle">Instantiated Vehicle object</param>
         public void SpawnVehicle(GameObject vehicle, Vector3 position, Quaternion rotation, bool practiceTarget, Faction faction, out Vehicle instantiatedVehicle)
         {
-            Vehicle vehicleComp = vehicle.GetComponent<Vehicle>();
             instantiatedVehicle = null;
             if (vehicle != null)
             {
-                vehicleComp.Allegiance = faction;
                 GameObject instantiatedObj = GameObject.Instantiate(vehicle, position, rotation);
                 instantiatedVehicle = instantiatedObj.GetComponent<Vehicle>();
+                instantiatedVehicle.Allegiance = faction;
 
                 if (instantiatedVehicle == null)
                 {
@@ -654,9 +709,14 @@ namespace GHPCMissionsMod
                     instantiatedVehicle.NoPlayerControl = true;
                     instantiatedVehicle.InvokeKilled();
                     if (instantiatedVehicle.FlammablesMgr != null && reduceExtraTargetFlammability.Value) instantiatedVehicle.FlammablesMgr.enabled = false;
+
+                    if (currentSceneUnitsManager != null)
+                    {
+                        currentSceneUnitsManager.LiveUnitsByFaction // remove from the list?
+                    }
                 }
 
-                // LoggerInstance.Msg($"{vehicle.name} successfully spawned at {vehicle.transform.position}");
+                LoggerInstance.Msg($"{vehicle.name} successfully spawned at {vehicle.transform.position}");
             }
             else
             {
