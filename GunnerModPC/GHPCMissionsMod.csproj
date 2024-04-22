@@ -35,13 +35,13 @@
       <HintPath>..\packages\Lib.Harmony.2.2.2\lib\net472\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>E:\programs\ghpc\dec2023_mod\GHPC_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>E:\programs\ghpc\apr2024_mod\GHPC_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>E:\programs\ghpc\dec2023_mod\GHPC_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      <HintPath>E:\programs\ghpc\apr2024_mod\GHPC_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
     <Reference Include="MelonLoader">
-      <HintPath>E:\programs\ghpc\dec2023_mod\MelonLoader\net6\MelonLoader.dll</HintPath>
+      <HintPath>E:\programs\ghpc\apr2024_mod\MelonLoader\net6\MelonLoader.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -52,17 +52,33 @@
     <Reference Include="System.Xml" />
     <Reference Include="Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>E:\programs\ghpc\dec2023_mod\GHPC_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>E:\programs\ghpc\apr2024_mod\GHPC_Data\Managed\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>E:\programs\ghpc\dec2023_mod\GHPC_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>E:\programs\ghpc\apr2024_mod\GHPC_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>E:\programs\ghpc\dec2023_mod\GHPC_Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>E:\programs\ghpc\apr2024_mod\GHPC_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicslModule">
+      <HintPath>E:\programs\ghpc\apr2024_mod\GHPC_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Eflatun.SceneReference">
+      <HintPath>E:\programs\ghpc\apr2024_mod\GHPC_Data\Managed\Eflatun.SceneReference.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>E:\programs\ghpc\apr2024_mod\GHPC_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>E:\programs\ghpc\apr2024_mod\GHPC_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BolderLimitMod.cs" />
+    <Compile Include="GHPCMissionsModDebug.cs" />
     <Compile Include="GHPCMissionsMod.cs" />
+    <Compile Include="GHPCMissionsModUtils.cs" />
+    <Compile Include="ModSceneReference.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
