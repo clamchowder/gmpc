@@ -234,7 +234,7 @@ namespace GHPCMissionsMod
 
         // Allows all units to be destroyed victory condition to be met if certain "unimportant" units
         // are still active
-        void AppendUnimportantUnits(List<Unit> units)
+        void AppendUnimportantUnits(List<IUnit> units)
         {
             SceneUnitsManager unitsManager = Resources.FindObjectsOfTypeAll<SceneUnitsManager>().FirstOrDefault();
             if (unitsManager == null)

@@ -111,12 +111,33 @@ namespace GHPCMissionsMod
             }
         }
 
+        void DumpVehicleLoadout(Vehicle vehicle)
+        {
+            if (vehicle.LoadoutManager == null)
+            {
+                LoggerInstance.Msg($"{vehicle.name} has no LoadoutManager\n");
+                return;
+            }
+
+            LoggerInstance.Msg(vehicle.name + ":");
+            int[] totalAmmoCounts = vehicle.LoadoutManager.TotalAmmoCounts;
+            for (int i = 0; i < totalAmmoCounts.Length; i++)
+            {
+                LoggerInstance.Msg("    " + vehicle.LoadoutManager.LoadedAmmoTypes[i].name + ": " + totalAmmoCounts[i]);
+            }
+        }
+
         /// <summary>
         /// Logs unit spawner prefabs (vehicles)
         /// </summary>
         /// <param name="unitSpawner"></param>
         public void DumpUnitSpawnerPrefabs(UnitSpawner unitSpawner)
         {
+            if (unitSpawner == null)
+            {
+                return;
+            }
+
             FieldInfo prefabsFieldInfo = typeof(UnitSpawner).GetField("_prefabLookupCached", BindingFlags.Instance | BindingFlags.NonPublic);
             Dictionary<string, GameObject> prefabs = prefabsFieldInfo.GetValue(unitSpawner) as Dictionary<string, GameObject>;
             if (prefabs != null)

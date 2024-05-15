@@ -2,6 +2,7 @@
 using GHCPMissionsMod;
 using GHPC;
 using GHPC.AI;
+using GHPC.AI.Interfaces;
 using GHPC.Mission;
 using GHPC.Mission.Data;
 using GHPC.Player;
@@ -69,6 +70,8 @@ namespace GHPCMissionsMod
         {
             BolderLimitUnitSpawner = unitSpawner;
 
+            if (BolderLimitExtraVehiclesList != null) BolderLimitExtraVehiclesList.Clear();
+
             BolderLimitExtraVehicleTypes = new Stack<string>();
             BolderLimitExtraVehicleTypes.Push("T3485");
             BolderLimitExtraVehicleTypes.Push("T54A");
@@ -90,6 +93,23 @@ namespace GHPCMissionsMod
                 SetAmmoCount(m1, increasedDartCount, feed: true);
             }
 
+            LoggerInstance.Msg("Trying to spawn extra T72s");
+            UnitMetaData metaData = new UnitMetaData();
+            metaData.Name = "TestT72";
+            metaData.Allegiance = Faction.Blue;
+            metaData.UnitType = UnitType.GroundVehicle;
+            metaData.Position = new Vector3(1769.992f, 81.6649f, 3805.465f);
+            metaData.Rotation = new Quaternion(-0.0034f, -0.9888f, -.0214f, 0.1477f);
+            unitSpawner.SpawnUnit("T72M", metaData);
+
+            UnitMetaData metaDat1a = new UnitMetaData();
+            metaData.Name = "TestT72_1";
+            metaData.Allegiance = Faction.Blue;
+            metaData.UnitType = UnitType.GroundVehicle;
+            metaData.Position = new Vector3(1746.585f, 81.7066f, 3814.008f);
+            metaData.Rotation = new Quaternion(-0.0078f, -0.9838f, -.0189f, 0.178f);
+            unitSpawner.SpawnUnit("T72M", metaData);
+
             IsModifiedBolderLimit = true;
 
             // remove smoke from red to even the odds
@@ -101,7 +121,7 @@ namespace GHPCMissionsMod
             }
 
             ModMessageStyle = new GUIStyle();
-            ModMessageStyle.fontSize = 36;
+            ModMessageStyle.fontSize = Screen.height / 60;
             ModMessageStyle.normal.textColor = Color.white;
 
             BolderLimitKilledVehicles = 0;
@@ -110,9 +130,8 @@ namespace GHPCMissionsMod
         private bool NextBolderLimitMessage = false;
         public void BolderLimitUpdate()
         {
-            if (BolderLimitNextWave && (BolderLimitExtraVehicleTypes.Count() > 0))
+            if ((BolderLimitExtraVehiclesList.Count - BolderLimitKilledVehicles <= 1) && (BolderLimitExtraVehicleTypes.Count() > 0))
             {
-                BolderLimitNextWave = false;
                 SpawnBolderLimitVehicles(BolderLimitExtraVehicleTypes.Pop());
                 NextBolderLimitMessage = true;
             }
@@ -128,7 +147,6 @@ namespace GHPCMissionsMod
             {
                 NextBolderLimitMessage = false;
                 BolderLimitMessageStopwatch = Stopwatch.StartNew();
-                LoggerInstance.Msg("Test message");
                 CurrentBolderLimitMessage = BolderLimitMessages.Pop();
             }
 
@@ -141,7 +159,7 @@ namespace GHPCMissionsMod
 
         void SpawnBolderLimitVehicles(string unitSpawnerName)
         {
-            LoggerInstance.Msg("Initiated spawn of " + unitSpawnerName);
+            LoggerInstance.Msg("Attempting to spawn a wave");
             WaypointHolder wpHolderTemplate = GameObject.FindFirstObjectByType(typeof(WaypointHolder)) as WaypointHolder;
             if (BolderLimitExtraVehiclesList == null)
             {
@@ -170,14 +188,8 @@ namespace GHPCMissionsMod
 
         void HandleVehicleKilled()
         {
-            // LoggerInstance.Msg("Test: Invoked Killed");
+            LoggerInstance.Msg("Test: Invoked Killed");
             Interlocked.Increment(ref BolderLimitKilledVehicles);
-
-            // Don't wait for it to hit 0 because that's the mission end condition
-            if (BolderLimitExtraVehiclesList.Count - BolderLimitKilledVehicles <= 1)
-            {
-                BolderLimitNextWave = true;
-            }
         }
     }
 }

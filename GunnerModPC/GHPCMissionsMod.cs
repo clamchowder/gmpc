@@ -170,7 +170,7 @@ namespace GHPCMissionsMod
                         {
                             missionMetaData.MissionName = "Bolder Limit (modded)";
                             FactionMissionInfo missionInfo = missionMetaData.FactionInfo[0];
-                            string newDesc = "Sitation - You are Alpha Company and you've been bad. Recon indicates a nearby Soviet commander is massing forces against you. It seems personal.\n";
+                            string newDesc = "Situation - You are Alpha Company and you've been bad. Recon indicates a nearby Soviet commander is massing forces against you. It seems personal.\n";
                             newDesc += "\nEnemy - Yes\n";
                             newDesc += "\nFriendly - 4x M1 Abrams, 2X M113. Reinforcement of 2x M1 Abrams. Support assets are 8x fire missions, 5x Smoke missions, and 4x air support.\n";
                             newDesc += "\nMission - Hold Objective Jolly\n";
@@ -229,6 +229,7 @@ namespace GHPCMissionsMod
                 GameObject btr60 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "BTR60PB").FirstOrDefault() as GameObject;
                 GameObject pt76 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "PT76").FirstOrDefault() as GameObject;
                 GameObject t64a = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T64A").FirstOrDefault() as GameObject;
+                GameObject t64b = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T64B").FirstOrDefault() as GameObject;
                 GameObject t62 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T62").FirstOrDefault() as GameObject;
                 GameObject t80 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T80B").FirstOrDefault() as GameObject;
                 GameObject t54 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T54A").FirstOrDefault() as GameObject;
@@ -308,28 +309,29 @@ namespace GHPCMissionsMod
                 {
                     SpawnNeutralVehicle(m60a1, new Vector3(600f, 12f, 1614f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _);
                     SpawnNeutralVehicle(m60a1, new Vector3(-660f, 12f, 1600f), new Quaternion(0f, -0.8f, 0f, -0.8f), practiceTarget: true, out _);
-                } 
+                }
 
                 if (extraHeAmmoVehiclesGrafenWoehrPatchEnabled.Value)
                 {
                     SpawnNeutralVehicle(m60a1, new Vector3(1179f, 22f, 1654f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle nerfedM60A1);
                     SpawnNeutralVehicle(t72, new Vector3(1220f, 24f, 1574f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle t72_he);
                     SpawnNeutralVehicle(t55, new Vector3(1220f, 25f, 1524f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle t55_he);
-                    SpawnNeutralVehicle(t72, new Vector3(1220f, 24f, 1424f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle t72_3bm32);
+                    SpawnNeutralVehicle(t64b, new Vector3(1220f, 24f, 1424f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle t64_missile);
                     SpawnNeutralVehicle(t54, new Vector3(1220f, 25f, 1474f), new Quaternion(0f, 0.8f, 0f, -0.8f), false, out Vehicle t54_1);
 
                     SetM774Ammo(nerfedM60A1);
                     SetAmmoCount(t72_he, new int[] { 1, 1, 42 });
                     SetT55APHE(t55_he);
                     SetAmmoCount(t55_he, new int[] { 20, 1, 21});
-                    SetT72ApfsdsAmmo(t72_3bm32);
+                    //SetT72ApfsdsAmmo(t64_missile);
+                    SetAmmoCount(t64_missile, new int[] { 2, 2, 2, 31 });
                 }
             }
             else if (sceneName == "GT01_Reservist_Recon")
             {
                 // It's basically the same thing as artillery. Right?
                 //GameObject t3485 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T-34-85").FirstOrDefault() as GameObject;
-                GameObject t3485 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T54A").FirstOrDefault() as GameObject;
+                GameObject t3485 = Resources.FindObjectsOfTypeAll(typeof(GameObject)).Where(o => o.name == "T-34-85").FirstOrDefault() as GameObject;
                 SpawnVehicle(t3485, new Vector3(460f, 130.7279f, -2576.2f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_1);
                 SpawnVehicle(t3485, new Vector3(480f, 130.7279f, -2576.2f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_2);
                 SpawnVehicle(t3485, new Vector3(500f, 130.7279f, -2576.2f), new Quaternion(0, -0.6166884f, 0, 0.7872075f), false, Faction.Red, out Vehicle t34_3);
@@ -345,6 +347,13 @@ namespace GHPCMissionsMod
                 FireMissionManager fireMissionManager = Resources.FindObjectsOfTypeAll<FireMissionManager>().FirstOrDefault();
                 FieldInfo remainingMissionFieldInfo = typeof(ArtilleryBattery).GetField("_missionsAvailable", BindingFlags.Instance | BindingFlags.NonPublic);
                 remainingMissionFieldInfo.SetValue(fireMissionManager.RedArtilleryBatteries[0], 0); // who needs artillery anyway
+
+                /*DumpVehicleLoadout(t34_1);
+                int[] ammoCount = new int[] { 38, 1 };
+                SetAmmoCount(t34_1, ammoCount);
+                SetAmmoCount(t34_2, ammoCount);
+                SetAmmoCount(t34_3, ammoCount);
+                SetAmmoCount(t34_4, ammoCount);*/
             }
             else if (sceneName == "GT02_kinetic_key")
             {
@@ -395,7 +404,7 @@ namespace GHPCMissionsMod
                 FieldInfo shotDelayIntervalFieldInfo = typeof(ArtilleryBattery).GetField("_interShotDelaySeconds", BindingFlags.Instance | BindingFlags.NonPublic);
                 FieldInfo batteryMunitionsFieldInfo = typeof(ArtilleryBattery).GetField("_munitions", BindingFlags.Instance | BindingFlags.NonPublic);
                 FieldInfo callDelayFieldInfo = typeof(ArtilleryBattery).GetField("_onCallImpactDelay", BindingFlags.Instance | BindingFlags.NonPublic);
-                ArtilleryBattery[] updatedBlueBatteries = new ArtilleryBattery[3];
+                ArtilleryBattery[] updatedBlueBatteries = new ArtilleryBattery[4];
 
                 // There should be two batteries in the mission (HE, smoke)
                 int batteryIdx = 0;
@@ -422,7 +431,35 @@ namespace GHPCMissionsMod
                 SpawnVehicle(t80, new Vector3(-332.6814f, 83.4028f, -900.2035f), new Quaternion(-9.112011E-05f, 0.6990631f, -0.0002299712f, 0.71506f), false, Faction.Red, out Vehicle t80_2);
                 SpawnVehicle(t80, new Vector3(-323.2041f, 83.9161f, -878.7783f), new Quaternion(-9.112011E-05f, 0.6990631f, -0.0002299712f, 0.71506f), false, Faction.Red, out Vehicle t80_3);
 
-                List<Unit> unimportantUnits = new List<Unit>();
+                List<IUnit> unimportantUnits = new List<IUnit>();
+                if (unitSpawner != null)
+                {
+                    List<Vector3> pos = new List<Vector3>();
+                    pos.Add(new Vector3(-368.3634f, 83.613f, -987.1602f));
+                    pos.Add(new Vector3(-353.2653f, 83.1939f, -955.3156f));
+                    pos.Add(new Vector3(-336.1085f, 83.0931f, -920.1476f));
+                    pos.Add(new Vector3(-296.9652f, 80.9326f, -958.4582f));
+
+                    List<Quaternion> rot = new List<Quaternion>();
+                    rot.Add(new Quaternion(0.0065f, 0.3052f, -.0022f, .9523f));
+                    rot.Add(new Quaternion(0.0041f, .2215f, -0.0048f, 0.9751f));
+                    rot.Add(new Quaternion(0.0001f, 0.226f, -.0018f, 0.9741f));
+                    rot.Add(new Quaternion(0.0131f, .9972f, -.0096f, -.0726f));
+
+                    for (int i = 0;i < pos.Count; i++)
+                    {
+                        UnitMetaData md = new UnitMetaData();
+                        md.Name = "ExtraUnit" + i;
+                        md.Allegiance = Faction.Red;
+                        md.UnitType = UnitType.GroundVehicle;
+                        md.Position = pos[i];
+                        md.Rotation = rot[i];
+                        IUnit spawnedUnit = unitSpawner.SpawnUnit("T64B", md);
+                        SetAmmoCount((Vehicle)spawnedUnit, new int[] { 2, 2, 2, 31 });
+                        unimportantUnits.Add(spawnedUnit);
+                    }
+                }
+
                 unimportantUnits.Add(t80.GetComponent<Vehicle>());
                 unimportantUnits.Add(t80_1);
                 unimportantUnits.Add(t80_2);
@@ -459,7 +496,7 @@ namespace GHPCMissionsMod
                 Claustrophobia_t55_list = Resources.FindObjectsOfTypeAll<Vehicle>().Where(o => o.name == "T55A");
 
                 // allow mission completion without killing t-34s
-                List<Unit> unimportantUnits = new List<Unit>();
+                List<IUnit> unimportantUnits = new List<IUnit>();
                 unimportantUnits.Add(t3485.GetComponent<Vehicle>());
                 unimportantUnits.AddRange(Claustrophobia_t34_list);
                 AppendUnimportantUnits(unimportantUnits);
@@ -507,7 +544,6 @@ namespace GHPCMissionsMod
             if (unitSpawner != null)
             {
                 LoggerInstance.Msg("Scene has a unit spawner");
-                /**/
             }
             else
             {
